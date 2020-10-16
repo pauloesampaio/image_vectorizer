@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  vectorizer:
+    build: "."
+    environment:
+      - USER="vectorizer-user"
+    volumes:
+      - .:/usr/src/app
