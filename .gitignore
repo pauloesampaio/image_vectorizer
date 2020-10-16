@@ -140,3 +140,9 @@ cython_debug/
 credentials/credentials.json
 
 .DS_Store
+
+.metaflow/
+.vscode/
+pictures/
+model/
+*.jpg
