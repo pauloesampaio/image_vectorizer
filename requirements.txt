@@ -6,4 +6,4 @@ dnspython==1.16.0
 metaflow==2.2.3
 nmslib==2.0.6
 scikit-learn==0.23.2
-opencv-python==4.4.0
+opencv-python==4.4.0.44
