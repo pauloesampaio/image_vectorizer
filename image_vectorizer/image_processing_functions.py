@@ -47,7 +47,8 @@ def download_face_detection_model(models_path, models_url):
 
 
 def _load_face_detection_model(models_path):
-    model_file, model_config = None
+    model_file = None
+    model_config = None
     for path in pathlib.Path(models_path).rglob("*.pb"):
         model_file = path.absolute().as_posix()
 
@@ -119,12 +120,11 @@ def _trim_image(image, var_threshold=250):
     return image[lim_top:lim_bottom, lim_left:lim_right]
 
 
-def _trime_iterative(image_combo):
+def _trim_iterative(image_combo):
     image_path, initial_threshold = image_combo
     image = cv2.imread(image_path)
     delta_threshold = 25
     min_area_pct = 0.25
-    max_area_pct = 0.99
     threshold = initial_threshold
     original_x = image.shape[1]
     original_y = image.shape[0]
@@ -136,15 +136,15 @@ def _trime_iterative(image_combo):
             current_iteration.shape[0] / original_y < min_area_pct
         ):
             threshold = threshold - delta_threshold
-        if (current_iteration.shape[1] / original_x >= max_area_pct) or (
-            current_iteration.shape[0] / original_y >= max_area_pct
+        elif (current_iteration.shape[1] / original_x == 1.0) or (
+            current_iteration.shape[0] / original_y == 1.0
         ):
             threshold = threshold - delta_threshold
-        elif threshold < 0:
-            done = True
-            current_iteration = image
         else:
             done = True
+        if threshold <= 0:
+            done = True
+            current_iteration = image
     cv2.imwrite(image_path, current_iteration)
     return None
 
@@ -152,5 +152,5 @@ def _trime_iterative(image_combo):
 def trim_images(image_list, var_threshold):
     image_list = [(w,) + (var_threshold,) for w in image_list]
     with ThreadPoolExecutor() as executor:
-        executor.map(_trime_iterative, image_list)
+        executor.map(_trim_iterative, image_list)
     return None
