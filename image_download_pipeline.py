@@ -63,25 +63,6 @@ class DownloadingPipeline(FlowSpec):
         """
         print("DONE")
 
-    # @step
-    # def vectorize_images(self):
-    #     """
-    #     Vectorizes downloaded images and saves numpy array with all vectors
-
-    #     """
-    #     import os
-    #     import numpy as np
-    #     from image_vectorizer.functions import generate_vectors
-
-    #     print("VECTORIZING IMAGES")
-    #     file_list, vectors = generate_vectors(
-    #         os.path.join(self.FILE_DIR, self.PICTURES_PATH)
-    #     )
-    #     with open(os.path.join(self.FILE_DIR, self.FILELIST_FILENAME), "w") as f:
-    #         f.write("\n".join(file_list))
-    #     np.save(os.path.join(self.FILE_DIR, self.VECTORS_FILENAME), vectors)
-    #     self.next(self.end)
-
 
 if __name__ == "__main__":
     DownloadingPipeline()
