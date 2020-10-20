@@ -45,7 +45,7 @@ class ProcessingPipeline(FlowSpec):
         Download face detection model
 
         """
-        from image_vectorizer.image_processing_functions import (
+        from image_vectorizer.utils import (
             download_face_detection_model,
         )
 
@@ -58,9 +58,9 @@ class ProcessingPipeline(FlowSpec):
         Remove faces from images
 
         """
-        from image_vectorizer.image_processing_functions import face_remover
+        from image_vectorizer.image_processing_functions import remove_face_list
 
-        face_remover(self.file_list, self.MODELS_PATH, self.FACE_PAD)
+        remove_face_list(self.file_list, self.MODELS_PATH, self.FACE_PAD)
         self.next(self.resize_pictures)
 
     @step
@@ -69,9 +69,9 @@ class ProcessingPipeline(FlowSpec):
         Resize images to a standard size
 
         """
-        from image_vectorizer.image_processing_functions import resize_images
+        from image_vectorizer.image_processing_functions import resize_image_list
 
-        resize_images(self.file_list, self.IMAGE_SIZE)
+        resize_image_list(self.file_list, self.IMAGE_SIZE)
         self.next(self.trim_pictures)
 
     @step
@@ -80,9 +80,9 @@ class ProcessingPipeline(FlowSpec):
         trim images
 
         """
-        from image_vectorizer.image_processing_functions import trim_images
+        from image_vectorizer.image_processing_functions import trim_image_list
 
-        trim_images(self.file_list, self.TRIM_THRESHOLD)
+        trim_image_list(self.file_list, self.TRIM_THRESHOLD)
         self.next(self.end)
 
     @step
