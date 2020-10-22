@@ -16,7 +16,7 @@ def check_if_exists(path_to_check, create=False):
 
 
 def download_image(image_url):
-    resp = requests.get(image_url, stream=True)
+    resp = requests.get(image_url, stream=True, timeout=5)
     im_bytes = BytesIO(resp.content)
     image = cv2.imdecode(np.fromstring(im_bytes.read(), np.uint8), -1)
     return image
@@ -29,14 +29,13 @@ def image_loader(image_location, remote=True):
         return cv2.imread(image_location)
 
 
-def resize_image(image_combo):
-    image_path, dest_size = image_combo
-    image = cv2.imread(image_path)
+def resize_image(image, dest_size):
     if max(image.shape[:2]) > dest_size:
         scale_factor = dest_size / max(image.shape)
         resized_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
-        cv2.imwrite(image_path, resized_image)
-    return None
+        return resized_image
+    else:
+        return image
 
 
 def download_face_detection_model(models_path, models_url):
@@ -66,13 +65,10 @@ def load_face_detection_model(models_path):
     return model
 
 
-def find_and_remove_faces(image_combo):
-    image_path, models_path, pad = image_combo
-    model = load_face_detection_model(models_path)
-    image = cv2.imread(image_path)
-    image_resize = cv2.resize(image, (300, 300))
+def find_and_remove_faces(image, model, pad=10):
+    resized_image = cv2.resize(image, (300, 300))
     blob = cv2.dnn.blobFromImage(
-        image=image_resize, mean=(104.0, 177.0, 123.0), swapRB=True
+        image=resized_image, mean=(104.0, 177.0, 123.0), swapRB=True
     )
     model.setInput(blob)
     detections = model.forward()
@@ -90,8 +86,9 @@ def find_and_remove_faces(image_combo):
     if bboxes:
         y_limit = bboxes[0][3] + pad
         cropped = image[y_limit:, :]
-        cv2.imwrite(image_path, cropped)
-    return None
+        return cropped
+    else:
+        return image
 
 
 def trim_image(image, var_threshold=250):
@@ -113,9 +110,7 @@ def trim_image(image, var_threshold=250):
     return image[lim_top:lim_bottom, lim_left:lim_right]
 
 
-def trim_iterative(image_combo):
-    image_path, initial_threshold = image_combo
-    image = cv2.imread(image_path)
+def trim_iterative(image, initial_threshold=250):
     delta_threshold = 25
     min_area_pct = 0.25
     threshold = initial_threshold
@@ -138,5 +133,4 @@ def trim_iterative(image_combo):
         if threshold <= 0:
             done = True
             current_iteration = image
-    cv2.imwrite(image_path, current_iteration)
-    return None
+    return current_iteration

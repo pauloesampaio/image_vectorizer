@@ -10,7 +10,7 @@ class ProcessingPipeline(FlowSpec):
         "pictures_path", default=os.path.join(FILE_DIR, "pictures")
     )
 
-    MODELS_PATH = Parameter("models_path", default=os.path.join(FILE_DIR, "model"))
+    MODELS_PATH = os.path.join(FILE_DIR, "model")
 
     MODELS_URL = Parameter(
         "models_url",
@@ -30,26 +30,12 @@ class ProcessingPipeline(FlowSpec):
         Gathering all images file_pathes
 
         """
-        from pathlib import Path
 
         self.file_list = []
-        for path in Path(self.PICTURES_PATH).rglob("*.jpg"):
+        for path in pathlib.Path(self.PICTURES_PATH).rglob("*.jpg"):
             self.file_list.append(path.absolute().as_posix())
 
         print(f"Found {len(self.file_list)} images")
-        self.next(self.download_face_detection_model)
-
-    @step
-    def download_face_detection_model(self):
-        """
-        Download face detection model
-
-        """
-        from image_vectorizer.utils import (
-            download_face_detection_model,
-        )
-
-        download_face_detection_model(self.MODELS_PATH, self.MODELS_URL)
         self.next(self.remove_faces)
 
     @step
@@ -58,9 +44,9 @@ class ProcessingPipeline(FlowSpec):
         Remove faces from images
 
         """
-        from image_vectorizer.image_processing_functions import remove_face_list
+        from image_vectorizer.image_processing_functions import remove_face_multithread
 
-        remove_face_list(self.file_list, self.MODELS_PATH, self.FACE_PAD)
+        remove_face_multithread(self.file_list, self.MODELS_PATH, self.FACE_PAD)
         self.next(self.resize_pictures)
 
     @step
@@ -69,9 +55,9 @@ class ProcessingPipeline(FlowSpec):
         Resize images to a standard size
 
         """
-        from image_vectorizer.image_processing_functions import resize_image_list
+        from image_vectorizer.image_processing_functions import resize_multithread
 
-        resize_image_list(self.file_list, self.IMAGE_SIZE)
+        resize_multithread(self.file_list, self.IMAGE_SIZE)
         self.next(self.trim_pictures)
 
     @step
@@ -80,9 +66,9 @@ class ProcessingPipeline(FlowSpec):
         trim images
 
         """
-        from image_vectorizer.image_processing_functions import trim_image_list
+        from image_vectorizer.image_processing_functions import trim_multithread
 
-        trim_image_list(self.file_list, self.TRIM_THRESHOLD)
+        trim_multithread(self.file_list, self.TRIM_THRESHOLD)
         self.next(self.end)
 
     @step

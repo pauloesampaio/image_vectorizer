@@ -50,9 +50,11 @@ class DownloadingPipeline(FlowSpec):
         Download images using multiprocess to speed it up
 
         """
-        from image_vectorizer.images_download_functions import download_image_list
+        from image_vectorizer.images_download_functions import (
+            download_image_multithread,
+        )
 
-        download_image_list(self.download_list)
+        download_image_multithread(self.download_list)
         self.next(self.end)
 
     @step
