@@ -1,4 +1,3 @@
-import os
 from metaflow import FlowSpec, step
 
 
