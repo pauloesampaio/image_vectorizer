@@ -1,66 +1,79 @@
 import streamlit as st
 import cv2
-import requests
-from io import BytesIO, StringIO
-import numpy as np
-from image_vectorizer.image_processing_functions import _load_face_detection_model, _trim_image
+from image_vectorizer.image_vectorizing_functions import load_vectorizer_model
+from image_vectorizer.utils import (
+    load_face_detection_model,
+    image_loader,
+    resize_image,
+    trim_iterative,
+    find_and_remove_faces,
+)
 
-st.write('''
+from image_vectorizer.cbir_model import (
+    load_ann_model,
+    get_file_list,
+    query_index,
+    get_results,
+)
+
+model_path = "./model"
+ann_model_path = "./model/ann_index.hsnw"
+file_list_path = "./file_list.txt"
+pad = 10
+dest_size = 448
+initial_threshold = 250
+
+
+st.write(
+    """
 # Simple image clf
 ## Enter the image url
-''')
+"""
+)
 
 url = st.text_input("Enter image url")
-file_path = st.file_uploader("Upload a jpg file", type="jpg")
 
 
 @st.cache
-model = _load_face_detection_model("./model")
-
-def remove_head(image, model, pad=10):
-    image_resize = cv2.resize(image, (300, 300))
-    blob = cv2.dnn.blobFromImage(
-        image=image_resize, mean=(104.0, 177.0, 123.0), swapRB=True
-    )
-    model.setInput(blob)
-    detections = model.forward()
-    conf_threshold = 0.5
-    h, w = image.shape[:2]
-    bboxes = []
-    for i in range(detections.shape[2]):
-        confidence = detections[0, 0, i, 2]
-        if confidence > conf_threshold:
-            x1 = int(detections[0, 0, i, 3] * w)
-            y1 = int(detections[0, 0, i, 4] * h)
-            x2 = int(detections[0, 0, i, 5] * w)
-            y2 = int(detections[0, 0, i, 6] * h)
-            bboxes.append((x1, y1, x2, y2))
-    if bboxes:
-        y_limit = bboxes[0][3] + pad
-        cropped = image[y_limit:, :]
-        return cropped
-    else:
-        return image
-
-def resize_image(image, target_size):
-    if max(image.shape[:2]) > target_size:
-        scale_factor = target_size / max(image.shape)
-        resized_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
-        return resized_image
-    else:
-        return image
+def cached_load_vectorizer():
+    vectorizer_model = load_vectorizer_model()
+    return vectorizer_model
 
 
-def image_saver(image_path, image):
-    cv2.imwrite(image_path, image)
+@st.cache
+def cached_load_file_list(file_list_path):
+    file_list = get_file_list(file_list_path)
+    return file_list
 
 
+@st.cache
+def cached_load_ann_model(ann_model_path):
+    ann_model = load_ann_model(ann_model_path)
+    return ann_model
+
+
+face_detector_model = load_face_detection_model(model_path)
+vectorizer_model = cached_load_vectorizer()
+ann_model = cached_load_ann_model(ann_model_path)
+file_list = cached_load_file_list(file_list_path)
+
+col1, col2 = st.beta_columns(2)
 
 if url:
-    current_image = download_image(url)
-    model_input = preprocess_image(current_image)
-    prediction = model.predict(model_input)
-    result = decode_result(prediction)
-
-if file_path:
-    cv2.imread(file_path)
+    current_image = image_loader(url, remote=True)
+    col1.header("Original")
+    col1.image(cv2.cvtColor(current_image, cv2.COLOR_BGR2RGB), width=128)
+    no_face_image = find_and_remove_faces(current_image, face_detector_model, pad)
+    resized_image = resize_image(no_face_image, dest_size)
+    trimmed_image = trim_iterative(resized_image, initial_threshold)
+    rgb_image = cv2.cvtColor(trimmed_image, cv2.COLOR_BGR2RGB)
+    col1.header("Processed")
+    col1.image(rgb_image, width=128)
+    vectorizer_input = cv2.resize(rgb_image, (224, 224)).reshape((1, 224, 224, 3))
+    feature_vector = vectorizer_model.predict(vectorizer_input)
+    results = get_results(file_list, query_index(ann_model, feature_vector))
+    col2.header("Matches")
+    for each in results:
+        col2.image(each["image"], width=128)
+        col2.write(each["product"])
+        col2.write(each["distance"])
