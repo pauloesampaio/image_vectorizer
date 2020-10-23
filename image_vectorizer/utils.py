@@ -3,7 +3,14 @@ import requests
 import pathlib
 import cv2
 import numpy as np
+import yaml
 from io import BytesIO
+
+
+def load_config(config_path="./config/config.yml"):
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+    return config
 
 
 def check_if_exists(path_to_check, create=False):
@@ -13,6 +20,8 @@ def check_if_exists(path_to_check, create=False):
             return print(f"{path_to_check} created")
         else:
             return None
+    else:
+        return True
 
 
 def download_image(image_url):
@@ -55,14 +64,20 @@ def download_face_detection_model(models_path, models_url):
 def load_face_detection_model(models_path):
     model_file = None
     model_config = None
-    for path in pathlib.Path(models_path).rglob("*.pb"):
-        model_file = path.absolute().as_posix()
+    isPath = check_if_exists(models_path)
 
-    for path in pathlib.Path(models_path).rglob("*.pbtxt"):
-        model_config = path.absolute().as_posix()
+    if not isPath:
+        print(f"{models_path} not found")
+        return None
+    else:
+        for path in pathlib.Path(models_path).rglob("*.pb"):
+            model_file = path.absolute().as_posix()
 
-    model = cv2.dnn.readNetFromTensorflow(model_file, model_config)
-    return model
+        for path in pathlib.Path(models_path).rglob("*.pbtxt"):
+            model_config = path.absolute().as_posix()
+
+        model = cv2.dnn.readNetFromTensorflow(model_file, model_config)
+        return model
 
 
 def find_and_remove_faces(image, model, pad=10):
@@ -110,9 +125,7 @@ def trim_image(image, var_threshold=250):
     return image[lim_top:lim_bottom, lim_left:lim_right]
 
 
-def trim_iterative(image, initial_threshold=250):
-    delta_threshold = 25
-    min_area_pct = 0.25
+def trim_iterative(image, initial_threshold=250, delta_threshold=25, min_area_pct=0.25):
     threshold = initial_threshold
     original_x = image.shape[1]
     original_y = image.shape[0]

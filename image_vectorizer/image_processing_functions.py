@@ -8,8 +8,6 @@ from .utils import (
 )
 from concurrent.futures import ThreadPoolExecutor
 
-MODEL = load_face_detection_model("../model")
-
 
 def _resize_multithread_helper(image_combo):
     file_path, dest_size = image_combo
@@ -46,13 +44,15 @@ def remove_face_multithread(image_list, face_detection_model_path, pad):
 
 
 def _trim_multithread_helper(image_combo):
-    file_path, initial_variance = image_combo
+    file_path, initial_variance, var_delta, min_area_pct = image_combo
     image = image_loader(file_path, remote=False)
-    return cv2.imwrite(file_path, trim_iterative(image, initial_variance))
+    return cv2.imwrite(
+        file_path, trim_iterative(image, initial_variance, var_delta, min_area_pct)
+    )
 
 
-def trim_multithread(image_list, var_threshold):
-    image_list = [(w,) + (var_threshold,) for w in image_list]
+def trim_multithread(image_list, var_threshold, var_delta, min_area_pct):
+    image_list = [(w,) + (var_threshold, var_delta, min_area_pct) for w in image_list]
     with ThreadPoolExecutor() as executor:
         executor.map(_trim_multithread_helper, image_list)
     return None

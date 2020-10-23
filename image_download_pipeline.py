@@ -1,31 +1,33 @@
 import os
-import pathlib
-from metaflow import FlowSpec, step, Parameter
+from metaflow import FlowSpec, step
 
 
 class DownloadingPipeline(FlowSpec):
-    FILE_DIR = pathlib.Path(__file__).parent.absolute()
-
-    PICTURES_PATH = Parameter(
-        "pictures_path", default=os.path.join(FILE_DIR, "pictures")
-    )
-
-    CREDENTIALS_PATH = Parameter(
-        "credentials_path",
-        default=os.path.join(FILE_DIR, "credentials"),
-    )
-
     @step
     def start(self):
+        """
+        Load config
+        """
+        import pathlib
+        from image_vectorizer.utils import load_config
+
+        self.FILE_DIR = pathlib.Path(__file__).parent.absolute()
+        self.config = load_config()
+        self.next(self.get_credentials)
+
+    @step
+    def get_credentials(self):
         """
         Load the credentials file.
 
         """
-        import os
         import json
 
         with open(
-            os.path.join(".", self.CREDENTIALS_PATH, "credentials.json"), "r"
+            os.path.join(
+                self.FILE_DIR, self.config["pictures_downloader"]["credentials_path"]
+            ),
+            "r",
         ) as f:
             self.credentials = json.load(f).get("mongo_db")
         self.next(self.query_db)
@@ -39,7 +41,8 @@ class DownloadingPipeline(FlowSpec):
         from image_vectorizer.images_download_functions import query_db
 
         self.download_list = query_db(
-            credentials=self.credentials, download_dir=self.PICTURES_PATH
+            credentials=self.credentials,
+            download_dir=self.config["pictures_downloader"]["pictures_path"],
         )
         print(f"Found {len(self.download_list)} pictures on the database")
         self.next(self.download_pictures)

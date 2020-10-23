@@ -1,28 +1,18 @@
-import os
-import pathlib
-from metaflow import FlowSpec, step, Parameter
+from metaflow import FlowSpec, step
 
 
 class VectorizingPipeline(FlowSpec):
-    FILE_DIR = pathlib.Path(__file__).parent.absolute()
-
-    PICTURES_PATH = Parameter(
-        "pictures_path", default=os.path.join(FILE_DIR, "pictures")
-    )
-
-    FILELIST_FILENAME = Parameter(
-        "filelist_filename", default=os.path.join(FILE_DIR, "file_list.txt")
-    )
-
-    VECTORS_FILENAME = Parameter(
-        "vectors_filename", default=os.path.join(FILE_DIR, "vectors.npy")
-    )
-
     @step
     def start(self):
         """
-        Just to kick things off
+        Loading config
         """
+        import pathlib
+        from image_vectorizer.utils import load_config
+
+        self.FILE_DIR = pathlib.Path(__file__).parent.absolute()
+        self.config = load_config()
+
         self.next(self.vectorize_images)
 
     @step
@@ -32,16 +22,38 @@ class VectorizingPipeline(FlowSpec):
 
         """
         import os
-        import numpy as np
         from image_vectorizer.image_vectorizing_functions import generate_vectors
 
         print("VECTORIZING IMAGES")
-        file_list, vectors = generate_vectors(
-            os.path.join(self.FILE_DIR, self.PICTURES_PATH)
+        self.file_list, self.vectors = generate_vectors(
+            os.path.join(
+                self.FILE_DIR, self.config["pictures_downloader"]["pictures_path"]
+            )
         )
-        with open(os.path.join(self.FILE_DIR, self.FILELIST_FILENAME), "w") as f:
-            f.write("\n".join(file_list))
-        np.save(os.path.join(self.FILE_DIR, self.VECTORS_FILENAME), vectors)
+        self.next(self.save_vectors)
+
+    @step
+    def save_vectors(self):
+        """
+        Save vectors and file list
+
+        """
+        import os
+        import numpy as np
+
+        with open(
+            os.path.join(
+                self.FILE_DIR, self.config["image_vectorizer"]["file_list_path"]
+            ),
+            "w",
+        ) as f:
+            f.write("\n".join(self.file_list))
+        np.save(
+            os.path.join(
+                self.FILE_DIR, self.config["image_vectorizer"]["vectors_path"]
+            ),
+            self.vectors,
+        )
         self.next(self.end)
 
     @step
