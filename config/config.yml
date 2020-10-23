@@ -21,13 +21,13 @@ image_vectorizer:
   file_list_path: "model/file_list.txt"
   vectors_path: "model/vectors.npy"
 
-ann_config:
+ann_model:
   ann_model_path: "model/ann_model.hsnw"
   init:
     method: "hnsw"
     space: "cosinesimil"
-    data_type: nmslib.DataType.DENSE_VECTOR
-  index_time":
+    #data_type: nmslib.DataType.DENSE_VECTOR
+  index_time:
     M: 15
     indexThreadQty: 4
     efConstruction: 100
