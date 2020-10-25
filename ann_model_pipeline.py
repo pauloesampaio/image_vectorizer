@@ -1,7 +1,7 @@
 from metaflow import FlowSpec, step
 
 
-class DownloadingPipeline(FlowSpec):
+class AnnPipeline(FlowSpec):
     @step
     def start(self):
         """
@@ -51,4 +51,4 @@ class DownloadingPipeline(FlowSpec):
 
 
 if __name__ == "__main__":
-    DownloadingPipeline()
+    AnnPipeline()
