@@ -18,7 +18,7 @@ def build_ann_model(vectors, init_config, index_time_config, model_path):
 
 
 def load_ann_model(model_path, init_config, query_time_config):
-    ann_index = nmslib.init(init_config)
+    ann_index = nmslib.init(**init_config)
     ann_index.loadIndex(model_path)
     ann_index.setQueryTimeParams(query_time_config)
     return ann_index

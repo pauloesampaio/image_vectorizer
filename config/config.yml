@@ -25,11 +25,10 @@ ann_model:
   ann_model_path: "model/ann_model.hsnw"
   init:
     method: "hnsw"
-    space: "cosinesimil"
-    #data_type: nmslib.DataType.DENSE_VECTOR
+    space: "l2"
   index_time:
     M: 15
     indexThreadQty: 4
-    efConstruction: 100
-  query_time":
-    efSearch": 100
+    efConstruction: 1000
+  query_time:
+    efSearch: 10000
