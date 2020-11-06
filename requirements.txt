@@ -1,9 +1,5 @@
 tensorflow-cpu==2.3.0
-streamlit==0.64.0
 pandas==1.0.5
-pymongo==3.10.1
-dnspython==1.16.0
 metaflow==2.2.3
-nmslib==2.0.6
 scikit-learn==0.23.2
-opencv-python==4.4.0.44
+bokeh==2.2.3

@@ -1,34 +1,7 @@
-pictures_downloader:
-  credentials_path: "credentials/credentials.json"
-  pictures_path: "pictures"
-
-face_detection:
-  model_path: "model"
-  model_url:
-    [
-      "https://raw.githubusercontent.com/opencv/opencv_3rdparty/dnn_samples_face_detector_20180220_uint8/opencv_face_detector_uint8.pb",
-      "https://raw.githubusercontent.com/opencv/opencv/master/samples/dnn/face_detector/opencv_face_detector.pbtxt",
-    ]
-  pad: 15
-
-image_processing:
-  max_size: 448
-  trim_initial_variance: 250
-  trim_delta_variance: 25
-  trim_min_area_pct: .25
-
-image_vectorizer:
-  file_list_path: "model/file_list.txt"
-  vectors_path: "model/vectors.npy"
-
-ann_model:
-  ann_model_path: "model/ann_model.hsnw"
-  init:
-    method: "hnsw"
-    space: "l2"
-  index_time:
-    M: 15
-    indexThreadQty: 4
-    efConstruction: 1000
-  query_time:
-    efSearch: 10000
+pictures_path: "pictures"
+file_list_path: "model/file_list.csv"
+vectors_path: "model/vectors.npy"
+infer_classes: False
+reduce_vector_dimensionality: False
+generate_tsne: True
+tsne_path: "model/tsne_xy.npy"

@@ -13,6 +13,20 @@ class VectorizingPipeline(FlowSpec):
         self.FILE_DIR = pathlib.Path(__file__).parent.absolute()
         self.config = load_config()
 
+        self.next(self.get_paths)
+
+    @step
+    def get_paths(self):
+        """
+        Get image paths
+        """
+        from image_vectorizer.utils import get_paths_dataframe
+
+        self.paths_dataframe = get_paths_dataframe(
+            self.config["pictures_path"],
+            self.config["infer_classes"],
+        )
+
         self.next(self.vectorize_images)
 
     @step
@@ -21,14 +35,12 @@ class VectorizingPipeline(FlowSpec):
         Vectorizes downloaded images and saves numpy array with all vectors
 
         """
-        import os
         from image_vectorizer.image_vectorizing_functions import generate_vectors
 
-        print("VECTORIZING IMAGES")
-        self.file_list, self.vectors = generate_vectors(
-            os.path.join(
-                self.FILE_DIR, self.config["pictures_downloader"]["pictures_path"]
-            )
+        self.vectors = generate_vectors(
+            self.paths_dataframe,
+            self.config["infer_classes"],
+            self.config["reduce_vector_dimensionality"],
         )
         self.next(self.save_vectors)
 
@@ -39,21 +51,32 @@ class VectorizingPipeline(FlowSpec):
 
         """
         import os
-        import numpy as np
+        from image_vectorizer.utils import save_array
 
-        with open(
-            os.path.join(
-                self.FILE_DIR, self.config["image_vectorizer"]["file_list_path"]
-            ),
-            "w",
-        ) as f:
-            f.write("\n".join(self.file_list))
-        np.save(
-            os.path.join(
-                self.FILE_DIR, self.config["image_vectorizer"]["vectors_path"]
-            ),
+        save_array(
+            os.path.join(self.FILE_DIR, self.config["vectors_path"]),
             self.vectors,
         )
+
+        self.paths_dataframe.to_csv(
+            os.path.join(self.FILE_DIR, self.config["file_list_path"]), index=False
+        )
+        self.next(self.calculate_tsne)
+
+    @step
+    def calculate_tsne(self):
+        """
+        Calculate TSNE coordinates
+
+        """
+        from sklearn.manifold import TSNE
+        from image_vectorizer.utils import save_array
+
+        if self.config["generate_tsne"]:
+            tsne = TSNE(random_state=12345, verbose=2, n_jobs=-1)
+            xy = tsne.fit_transform(self.vectors)
+            save_array(self.config["tsne_path"], xy)
+
         self.next(self.end)
 
     @step
