@@ -10,14 +10,6 @@ xy = np.load(config["tsne_path"])
 paths_dataframe = pd.read_csv(config["file_list_path"])
 
 
-# st.write(
-#     """
-# # Vanilla image matcher
-# ## Enter the image url
-# """
-# )
-
-
 def build_plot(xy):
     source = ColumnDataSource(
         data=dict(x=xy[:, 0], y=xy[:, 1], imgs=paths_dataframe["filename"].to_list())
