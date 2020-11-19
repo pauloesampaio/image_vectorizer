@@ -37,7 +37,7 @@ class VectorizingPipeline(FlowSpec):
         """
         from image_vectorizer.image_vectorizing_functions import generate_vectors
 
-        self.vectors = generate_vectors(
+        (self.vectors, self.paths, self.labels) = generate_vectors(
             self.paths_dataframe,
             self.config["infer_classes"],
             self.config["reduce_vector_dimensionality"],
@@ -51,6 +51,7 @@ class VectorizingPipeline(FlowSpec):
 
         """
         import os
+        import pandas as pd
         from image_vectorizer.utils import save_array
 
         save_array(
@@ -58,7 +59,8 @@ class VectorizingPipeline(FlowSpec):
             self.vectors,
         )
 
-        self.paths_dataframe.to_csv(
+        vectors_df = pd.DataFrame({"filename": self.paths, "class": self.labels})
+        vectors_df.to_csv(
             os.path.join(self.FILE_DIR, self.config["file_list_path"]), index=False
         )
         self.next(self.calculate_tsne)

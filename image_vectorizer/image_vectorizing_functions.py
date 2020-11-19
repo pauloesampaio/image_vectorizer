@@ -45,4 +45,9 @@ def generate_vectors(paths_dataframe, use_classes=False, reduce_dimensionality=F
         verbose=1,
         use_multiprocessing=True,
     )
-    return vectors
+    paths = image_generator.filepaths
+    if use_classes:
+        labels = image_generator.labels
+    else:
+        labels = None
+    return vectors, paths, labels
