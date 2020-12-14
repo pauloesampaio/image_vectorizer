@@ -5,9 +5,35 @@ from bokeh.plotting import figure, ColumnDataSource, show
 from bokeh.models import HoverTool
 from bokeh.palettes import Spectral6
 from bokeh.transform import factor_cmap
+from sklearn.manifold import TSNE
+
+
+def calculate_tsne(vectors):
+    """Calculates 2-dimensional t-SNE representation of given set of vectors
+
+    Args:
+        vectors (np.array): Set of vectors
+
+    Returns:
+        np.array: 2-dim t-SNE representation
+    """
+    tsne = TSNE(random_state=12345, verbose=2, n_jobs=-1)
+    xy = tsne.fit_transform(vectors)
+    return xy
 
 
 def build_plot(xy, paths, labels=None):
+    """Builds t-SNE scatterplot
+
+    Args:
+        xy (np.array): Set of vectors
+        paths (list): list of paths
+        labels (bool): Bool, if labels should be used or not
+
+    Returns:
+        bokeh.graph: bokeh plot
+
+    """
     if labels:
         colors = factor_cmap("labels", palette=Spectral6, factors=list(set(labels)))
         plot_labels = labels
@@ -65,7 +91,8 @@ def build_plot(xy, paths, labels=None):
 
 if __name__ == "__main__":
     config = load_config()
-    xy = np.load(config["tsne_path"])
+    vectors = np.load(config["vectors_path"])
+    xy = calculate_tsne(vectors)
     paths_dataframe = pd.read_csv(config["file_list_path"])
     paths = paths_dataframe["filename"].tolist()
     if config["infer_classes"]:

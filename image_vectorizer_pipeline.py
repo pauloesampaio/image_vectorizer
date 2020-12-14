@@ -63,22 +63,6 @@ class VectorizingPipeline(FlowSpec):
         vectors_df.to_csv(
             os.path.join(self.FILE_DIR, self.config["file_list_path"]), index=False
         )
-        self.next(self.calculate_tsne)
-
-    @step
-    def calculate_tsne(self):
-        """
-        Calculate TSNE coordinates
-
-        """
-        from sklearn.manifold import TSNE
-        from image_vectorizer.utils import save_array
-
-        if self.config["generate_tsne"]:
-            tsne = TSNE(random_state=12345, verbose=2, n_jobs=-1)
-            xy = tsne.fit_transform(self.vectors)
-            save_array(self.config["tsne_path"], xy)
-
         self.next(self.end)
 
     @step

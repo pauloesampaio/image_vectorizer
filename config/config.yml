@@ -3,5 +3,3 @@ file_list_path: "model/file_list.csv"
 vectors_path: "model/vectors.npy"
 infer_classes: False
 reduce_vector_dimensionality: False
-generate_tsne: True
-tsne_path: "model/tsne_xy.npy"
